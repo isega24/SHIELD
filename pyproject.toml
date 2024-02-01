@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "SHIELD_isega24"
+version = "0.0.1"
+authors = [
+  { name="Ivan Sevillano-Garcia", email="isevillano@ugr.es" },
+]
+description = "SHIELD Regularization for Artificial Intelligence"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+        "torch",
+        "scikit-learn",
+        "scikit-image",
+        "matplotlib",
+        "numpy",
+        "scipy",
+        "pandas",
+        "torchvision",
+        "efficientnet_pytorch",
+        "tqdm",
+        "opencv-python",
+        "IPython",
+        "seaborn",
+        "plotly",
+        "ipywidgets",
+        "sphinx",
+        "sphinx_rtd_theme",
+        "sphinxcontrib.bibtex",
+        "nbsphinx",
+        "wget",
+        "pandoc",
+        "ReVel",
+        "torchsummary",
+        "tensorboard",
+    ]
+
+[project.urls]
+Homepage = "https://github.com/isega24/SHIELD"
