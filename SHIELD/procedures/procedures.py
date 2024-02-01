@@ -90,7 +90,7 @@ def train_step(
         if isinstance(reg, torch.Tensor):
             REGS += reg.item()
         else:
-            REGS += reg
+            REGS +=  reg if reg != None else 0
 
         ds_loader.set_postfix(
             {
