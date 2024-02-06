@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 from torch.utils.data import random_split
-import parser
+from . import parser
 
 from ReVel.perturbations import get_perturbation
 from ReVel.load_data import load_data
