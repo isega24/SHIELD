@@ -13,14 +13,35 @@ def shield(
 ):
     """
     Selective Hidden Input Evaluation for Learning Dynamics (SHIELD)
-    :param model: model
-    :param input: input tensor
-    :param input_0: input tensor to be considered as the 'null' input with the same shape as input
-    :param segmentation: segmentation method to be used
-    :param device: device to be used
-    :param percentage: percentage of the input to be evaluated
-    :return: SHIELD score
+
+    This function calculates the SHIELD score for a given model and input tensor.
+    SHIELD is a method for evaluating the importance of different regions in an input tensor
+    for the predictions made by a model. It measures the sensitivity of the model's output to changes
+    in specific regions of the input.
+
+    :param model: The model to be evaluated.
+    :param input: The input tensor for which the SHIELD score is calculated.
+    :param input_0: The input tensor to be considered as the `null` input with the same shape as input.
+    :param segmentation: The segmentation method to be used.
+    :param device: The device to be used for computation.
+    :param percentage: The percentage of the input to be evaluated.
+    :return: The SHIELD score.
+
+    Example usage:
+    
+    .. code-block:: python
+
+        model = MyModel() \\ Your classification model
+        input = torch.rand((1, 3, 224, 224))
+        shield_score = shield(model, input, input_0=None, segmentation=1, device='cuda', percentage=2)
+        print(shield_score)
+
+    
+    The `shield_score` is a scalar tensor representing the SHIELD score for the given input tensor and can 
+    be used as a regularization term in the training of the model.
+    
     """
+    
     if input_0 == None:
         input_0 = torch.zeros_like(input) + torch.mean(
             input, dim=(1, 2, 3), keepdim=True
@@ -81,15 +102,9 @@ def shield(
     Px_modif = torch.softmax(modified_output, dim=1)
     Px = torch.softmax(output_original, dim=1)
 
-    # constraint_1 = torch.mean(
-    #    -torch.sum(Px_modif * torch.log(torch.divide(Px, Px_modif)), dim=1)
-    # )
     constraint_1 = torch.mean(
         -torch.sum(Px * (torch.log(Px_modif) - torch.log(Px)), dim=1)
     )
-    # constraint_2 = torch.mean(
-    #    -torch.sum(Px * torch.log(torch.divide(Px_modif,Px)), dim=1)
-    # )
     constraint_2 = torch.mean(
         -torch.sum(Px_modif * (torch.log(Px) - torch.log(Px_modif)), dim=1)
     )

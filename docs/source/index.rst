@@ -11,8 +11,10 @@ Welcome to SHIELD's documentation!
    :caption: Contents:
    :numbered:
 
+   intro
    install
    usage
+   modules
 
 
 

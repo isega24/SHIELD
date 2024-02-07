@@ -13,6 +13,15 @@ from . import parser
 from ReVel.perturbations import get_perturbation
 from ReVel.load_data import load_data
 
+#Sphinx documentation
+''' 
+Train example
+================
+    Train script example to train a model and save the results in a tensorboard file.
+    The model is trained using the SHIELD algorithm, if the shield flag is set to True.
+    The model is trained using the Baseline algorithm, if the shield flag is set to False.
+
+'''
 n_classes = {
     "CIFAR10": 10,
     "CIFAR100": 100,
