@@ -8,7 +8,6 @@ the paper "SHIELD: ":
     :maxdepth: 2
 
     notebooks/train
-    notebooks/evaluate
     notebooks/test_REVEL
 
 

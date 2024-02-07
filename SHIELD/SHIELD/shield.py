@@ -12,8 +12,8 @@ def shield(
     percentage=None,
 ):
     """
-    Selective Hidden Input Evaluation for Learning Dynamics (SHIELD)
-
+    Selective Hidden Input Evaluation for Learning Dynamics (SHIELD).
+    
     This function calculates the SHIELD score for a given model and input tensor.
     SHIELD is a method for evaluating the importance of different regions in an input tensor
     for the predictions made by a model. It measures the sensitivity of the model's output to changes
@@ -25,23 +25,19 @@ def shield(
     :param segmentation: The segmentation method to be used.
     :param device: The device to be used for computation.
     :param percentage: The percentage of the input to be evaluated.
-    :return: The SHIELD score.
+    :return: The `shield_score`. It is a scalar tensor representing the SHIELD score for the given input tensor and can
+    be used as a regularization term in the training of the model given as parameter.
 
     Example usage:
-    
+
     .. code-block:: python
 
         model = MyModel() \\ Your classification model
         input = torch.rand((1, 3, 224, 224))
         shield_score = shield(model, input, input_0=None, segmentation=1, device='cuda', percentage=2)
         print(shield_score)
-
-    
-    The `shield_score` is a scalar tensor representing the SHIELD score for the given input tensor and can 
-    be used as a regularization term in the training of the model.
-    
     """
-    
+
     if input_0 == None:
         input_0 = torch.zeros_like(input) + torch.mean(
             input, dim=(1, 2, 3), keepdim=True
@@ -49,7 +45,7 @@ def shield(
     model = model.to(device)
     input = input.to(device)
     input_0 = input_0.to(device)
-    
+
     output_original = checkpoint(model, input,use_reentrant=True)
 
     feat_importance = (

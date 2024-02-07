@@ -5,6 +5,32 @@ from torch.utils.checkpoint import checkpoint
 
 
 def classifier(pretrained_model, num_classes):
+    '''
+    Model used for classification on SHIELD paper.
+    
+    This function returns a model with the specified number of classes and the specified pretrained model of
+    the torchvision library.
+    
+    This method was used as a wrapper to load just the classifier of the SHIELD paper but
+    you can use your own model if it accepts the same input format as the torchvision
+    models and returns a tensor with the same shape as the number of classes in the logits space.
+    
+    :param pretrained_model: The name of the pretrained model to be used. It can be one of the following:
+        - efficientnet-b2
+        - efficientnet_v2_s
+        - vit_b_16
+        - swin_v2_s
+    :param num_classes: The number of classes of the dataset.
+    :return: The model with the specified number of classes and the specified pretrained model. We
+        delete the last layer of the model and add a new layer with the specified number of classes.
+        
+    To load a specific model, use the following code:
+
+    .. code-block:: python
+    
+        model = classifier("efficientnet-b2", 10)
+    '''
+    
     if "efficientnet-b2" == pretrained_model:
         model_pretrained = torchvision.models.efficientnet_b2(weights="IMAGENET1K_V1")
         pretrained_state_dict = model_pretrained.state_dict()
@@ -51,6 +77,41 @@ def classifier(pretrained_model, num_classes):
 def train_step(
     ds_loader, model, optimizer, loss_f, reg_f, device, transform=None, train=True
 ):
+    '''
+    Train step for the model. This function proceed to do a full epoch of training or validation, detending
+    on the `train` parameter. It returns the loss, accuracy and regularization of the model.
+    
+    :param ds_loader: The dataloader to be used for training or validation.
+    :param model: The model to be trained or validated.
+    :param optimizer: The optimizer to be used for training. If `train` is False, this parameter is not used.
+    :param loss_f: The loss function to be used for training or validation.
+    :param reg_f: The regularization function to be used for training or validation. It can be None for no regularization.
+    :param device: The device to be used for training or validation.
+    :param transform: The transformation to be used for training. If `train` is False, this parameter is not used. It 
+        can be None for no data augmentation or transformation needed.
+    :param train: A boolean indicating if the model should be trained or validated. 
+        - If `train` is True, the model is trained and updated with the optimizer.
+        - If `train` is False, the model is validated and the optimizer is not used.
+    :return: The loss, accuracy and regularization of the model.
+    
+    Example of a full step of training and validation using this function:
+    
+    .. code-block:: python
+    
+        # We have a model, a train dataloader, a validation dataloader, a loss function and a regularization function. 
+        # The previous step had `best_val_loss` as a variable to store the best validation loss over the epochs.
+        
+        # The model weights are updated with the optimizer on the training phase. The gradient is calculated with the 
+        # loss and the regularization function.
+        loss, acc, reg = train_step(train_dataloader, model, optimizer, loss_f, reg_f, device, transform, train=True)
+        
+        # The model is not updated on the validation phase. The best model is saved if the validation `loss+reg` is 
+        # better than the previous one.
+        val_loss, val_acc, val_reg = train_step(validation_dataloader, model, optimizer, loss_f, reg_f, device, transform, train=False)
+        if loss+reg < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), "best_model.pt")
+    '''
     ACC, LOSS, REGS = 0.0, 0.0, 0.0
 
     ds_loader = tqdm.tqdm(ds_loader, desc="Training" if train else "Validation")
@@ -108,6 +169,20 @@ def train_step(
 
 
 def validation_step(ds_loader, model, loss_f, reg_f, device):
+    '''
+    Validation step for the model. 
+    
+    This function is a wrapper for the `train_step` function with the `train` parameter set to False.
+    
+    :param ds_loader: The dataloader to be used for validation.
+    :param model: The model to be validated.
+    :param loss_f: The loss function to be used for validation.
+    :param reg_f: The regularization function to be used for validation. It can be None for no regularization.
+    :param device: The device to be used for validation.
+    :return: The loss, accuracy and regularization of the model.
+    
+    '''
+    
     return train_step(
         ds_loader=ds_loader,
         model=model,
