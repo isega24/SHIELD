@@ -1,2 +1,2 @@
-from SHIELD import *
-from procedures import *
+from .SHIELD import *
+from .procedures import *

@@ -25,6 +25,9 @@ def arg_parser():
         "--shield", action="store_true", help="Constraint of taking random features"
     )
     parser.add_argument(
+        "--xshield", action="store_true", help="Constraint of taking low important features"
+    )
+    parser.add_argument(
         "--batch_size", metavar="B", type=int, default=32, help="Batch size"
     )
     parser.add_argument(

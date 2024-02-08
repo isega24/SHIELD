@@ -1,27 +1,18 @@
 import os
 import shutil
 import json
-from SHIELD.SHIELD import shield
+from SHIELD.SHIELD import shield,xshield
 from SHIELD.procedures import procedures
 import torch
 import torch.nn.functional as F
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
 from torch.utils.data import random_split
-from . import parser
+from SHIELD.tests.parser import arg_parser
 
 from ReVel.perturbations import get_perturbation
 from ReVel.load_data import load_data
 
-#Sphinx documentation
-''' 
-Train example
-================
-    Train script example to train a model and save the results in a tensorboard file.
-    The model is trained using the SHIELD algorithm, if the shield flag is set to True.
-    The model is trained using the Baseline algorithm, if the shield flag is set to False.
-
-'''
 n_classes = {
     "CIFAR10": 10,
     "CIFAR100": 100,
@@ -38,17 +29,17 @@ else:
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 if __name__ == "__main__":
-    args_parser = parser.arg_parser()
+    args_parser = arg_parser()
 
     args = args_parser.parse_args()
 
     classifier = procedures.classifier(args.pretrained_model, n_classes[args.dataset])
     classifier.to(device)
 
-    configuration = "SHIELD" if args.shield else "Baseline"
+    configuration = "SHIELD" if args.shield else ("X-SHIELD" if args.xshield else "Baseline")
 
     config_name = f"{configuration}_{args.pretrained_model}" + (
-        "" if args.pretrained_model == "Baseline" else f"_{args.percentage}"
+        "" if configuration == "Baseline" else f"_{args.percentage}"
     )
     save_model_dir = f"results/{args.dataset}/{config_name}"
 
@@ -110,7 +101,8 @@ if __name__ == "__main__":
             model=classifier,
             optimizer=optimizer,
             loss_f=loss_f,
-            reg_f=lambda x,y:shield(model=x,input=y,percentage=args.percentage,device =device) if args.shield else None,
+            reg_f=lambda x,y:shield(model=x,input=y,percentage=args.percentage,device=device) if args.shield else 
+                            xshield(model=x,input=y,percentage=args.percentage,device=device) if args.xshield else None,
             device=device,
             #transform=transform,
         )
@@ -122,14 +114,15 @@ if __name__ == "__main__":
             ds_loader=ValLoader,
             model=classifier,
             loss_f=loss_f,
-            reg_f=lambda x,y:shield(model=x,input=y,percentage=args.percentage,device=device) if args.shield else None,
+            reg_f=lambda x,y:shield(model=x,input=y,percentage=args.percentage,device=device) if args.shield else 
+                            xshield(model=x,input=y,percentage=args.percentage,device=device) if args.xshield else None,
             device=device,
         )
         writer.add_scalar("Val/Accuracy", val_acc, epoch)
         writer.add_scalar("Val/Loss", val_loss, epoch)
         writer.add_scalar("Val/Regularization", val_reg, epoch)
-        if val_loss < best_loss:
-            best_loss = val_loss
+        if val_loss + val_reg < best_loss:
+            best_loss = val_loss + val_reg
             torch.save(classifier.state_dict(), save_model_dir+"/model.pt")
             print("Saved model")
 
@@ -143,7 +136,9 @@ if __name__ == "__main__":
     )
     TestLoader = DataLoader(test, batch_size=args.batch_size, shuffle=False)
     test_loss, test_acc, test_reg = procedures.validation_step(
-        ds_loader=TestLoader, model=classifier, loss_f=loss_f, reg_f= lambda x,y:shield(model=x,input=y,percentage=args.percentage) if args.shield else None,
+        ds_loader=TestLoader, model=classifier, loss_f=loss_f, 
+        reg_f= lambda x,y:shield(model=x,input=y,percentage=args.percentage) if args.shield else 
+                        xshield(model=x,input=y,percentage=args.percentage,device=device) if args.xshield else None,
         device=device
     )
 
