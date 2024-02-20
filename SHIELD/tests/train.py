@@ -7,6 +7,8 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.tensorboard.writer import SummaryWriter
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
 from torch.utils.data import random_split
 from SHIELD.tests.parser import arg_parser
 
@@ -46,8 +48,18 @@ if __name__ == "__main__":
     if args.force:
         shutil.rmtree(save_model_dir, ignore_errors=True)
     else:
-        if os.path.exists(save_model_dir+"/model.pt"):
-            raise ValueError("Model already exists")
+        # Si no existe el directorio, lo creo
+        if not os.path.exists(save_model_dir):
+            os.makedirs(save_model_dir)
+        else:
+            event_accum = EventAccumulator(save_model_dir)
+            event_accum.Reload()
+            
+            # Abro el tensorboard y compruebo si hay Test/Accuracy. Si lo hay, no hago nada. Si no, lo hago.
+            if "Test/Accuracy" in event_accum.Tags()["scalars"]:
+                print(event_accum.Scalars("Test/Accuracy")[-1].value)
+                raise ValueError("Model already tested: "+save_model_dir)
+
 
     # transform = procedures.data_augmentation(args)
 
@@ -126,7 +138,7 @@ if __name__ == "__main__":
             torch.save(classifier.state_dict(), save_model_dir+"/model.pt")
             print("Saved model")
 
-    classifier.load_state_dict(torch.load(save_model_dir+"/model.pt"))
+    classifier.load_state_dict(torch.load(save_model_dir+"/model.pt"), map_location=device)
 
     test = load_data(
         args.dataset,
@@ -137,8 +149,8 @@ if __name__ == "__main__":
     TestLoader = DataLoader(test, batch_size=args.batch_size, shuffle=False)
     test_loss, test_acc, test_reg = procedures.validation_step(
         ds_loader=TestLoader, model=classifier, loss_f=loss_f, 
-        reg_f= lambda x,y:shield(model=x,input=y,percentage=args.percentage) if args.shield else 
-                        xshield(model=x,input=y,percentage=args.percentage,device=device) if args.xshield else None,
+        reg_f= lambda x,y:shield(model=x.to(device),input=y.to(device),percentage=args.percentage) if args.shield else 
+                        xshield(model=x.to(device),input=y.to(device),percentage=args.percentage,device=device) if args.xshield else None,
         device=device
     )
 

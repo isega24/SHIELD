@@ -125,17 +125,17 @@ def train_step(
     for data in ds_loader:
         batch_input, batch_labels = data
         total += len(batch_input)
-        batch_input, batch_labels = batch_input.to(device).float(), batch_labels.to(device)
+        batch_input, batch_labels = batch_input.float().to(device), batch_labels.to(device)
         if transform != None and train == True:
             batch_input = transform(batch_input)
         batch_input.requires_grad = True
-        batch_input, batch_labels = batch_input.to(device).float(), batch_labels.to(device        )
+        batch_input, batch_labels = batch_input.float().to(device), batch_labels.to(device)
 
         if train == True:
             optimizer.zero_grad()
         reg = reg_f(model, batch_input)
         # output = model(batch_input)
-        output = checkpoint(model, batch_input)#,use_reentrant=True)
+        output = checkpoint(model, batch_input,use_reentrant=True)
 
         loss = loss_f(output, batch_labels)
         LOSS += loss.item()

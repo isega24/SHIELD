@@ -230,7 +230,7 @@ def xshield(
 
         model = MyModel() \\ Your classification model
         input = torch.rand((1, 3, 224, 224))
-        shield_score = shield(model, input, input_0=None, segmentation=1, device='cuda', percentage=2)
+        shield_score = xshield(model, input, input_0=None, segmentation=1, device='cuda', percentage=2)
         print(shield_score)
     """
 

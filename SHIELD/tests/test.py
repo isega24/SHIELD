@@ -14,6 +14,7 @@ from SHIELD.procedures import procedures
 import os
 
 os.environ["MPLCONFIGDIR"] = os.getcwd() + "/configs/"
+import matplotlib
 
 # Script que calcula el accuracy y el loss de un modelo entrenado
 if __name__ == "__main__":
@@ -35,8 +36,8 @@ if __name__ == "__main__":
     event_acc = EventAccumulator(f"{args.saved_dir}/")
     event_acc.Reload()
     if (not args.force) and ("Test/Accuracy" in event_acc.Tags()["scalars"]):
-        print("Test accuracy already computed. Use --force to overwrite")
-        exit(0)
+
+        raise ValueError("Test accuracy already computed. Use --force to overwrite")
 
     torch.random.manual_seed(args.seed)
 
@@ -81,7 +82,7 @@ if __name__ == "__main__":
 
     classifier.load_state_dict(torch.load(save_model_dir, map_location=device))
 
-    batch_size = 8
+    batch_size = 32
     TestLoader = DataLoader(Test, batch_size=batch_size, shuffle=False)
 
 
