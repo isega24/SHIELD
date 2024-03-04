@@ -12,7 +12,7 @@ import os
 from ReVel.LLEs import get_xai_model
 from ReVel.perturbations import get_perturbation
 from ReVel.load_data import load_data
-from ReVel.revel.revel import ReVel
+from ReVel.revel.revel import ReVel 
 import SHIELD.procedures as procedures
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
