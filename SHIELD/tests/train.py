@@ -56,9 +56,10 @@ if __name__ == "__main__":
             event_accum.Reload()
             
             # Abro el tensorboard y compruebo si hay Test/Accuracy. Si lo hay, no hago nada. Si no, lo hago.
-            if "Test/Accuracy" in event_accum.Tags()["scalars"]:
-                print(event_accum.Scalars("Test/Accuracy")[-1].value)
-                raise ValueError("Model already tested: "+save_model_dir)
+            if "Test/Accuracy" in event_accum.Tags()["scalars"] and "Test/Loss" in event_accum.Tags()["scalars"]:
+                print("Acc: " + event_accum.Scalars("Test/Accuracy")[-1].value)
+                print("Loss: " + event_accum.Scalars("Test/Loss")[-1].value)
+                raise ValueError("Model already tested: " + save_model_dir)
 
 
     # transform = procedures.data_augmentation(args)

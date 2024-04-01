@@ -161,3 +161,7 @@ cython_debug/
 data/
 ~/.conda
 results/
+outputs/
+docs/results.csv
+docs/tables/
+test_results.txt
