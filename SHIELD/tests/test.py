@@ -35,7 +35,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     event_acc = EventAccumulator(f"{args.saved_dir}/")
     event_acc.Reload()
-    if (not args.force) and ("Test/Accuracy" in event_acc.Tags()["scalars"]):
+    if (not args.force) and "Test/Accuracy" in event_acc.Tags()["scalars"]  and "Test/Loss" in event_acc.Tags()["scalars"]:
 
         raise ValueError("Test accuracy already computed. Use --force to overwrite")
 
@@ -125,5 +125,9 @@ if __name__ == "__main__":
     print(f"Accuracy: {acc / total}")
     print(f"Loss: {loss / total}")
     # Aniade en el writer el accuracy y el loss de test
+    # Borrar el scalar "Test/Accuracy" y "Test/Loss" si se quiere sobreescribir
+    
+    
     writer.add_scalar("Test/Accuracy", acc / total, 0)
     writer.add_scalar("Test/Loss", loss / total, 0)
+    writer.close()

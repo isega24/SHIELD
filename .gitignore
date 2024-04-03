@@ -166,3 +166,7 @@ output/
 docs/imagenes/
 docs/tables/
 docs/*.csv
+outputs/
+docs/results.csv
+docs/tables/
+test_results.txt
