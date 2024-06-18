@@ -37,6 +37,7 @@ parser.add_argument(
     type=str,
     default="runs/Flowers/efficientnet_v2_s_baseline_0.00/",
 )
+parser.add_argument("--force", action="store_true")
 
 args = parser.parse_args()
 
@@ -58,9 +59,6 @@ xai_model = "LIME"
 dim = 8
 
 csv_file = args.run_fold + name
-
-if os.path.exists(csv_file):
-    os.remove(csv_file)
 
 
 perturbation = get_perturbation(
@@ -84,8 +82,15 @@ print("Loaded the pretrained model.")
 total = 0
 experiments_done = []
 if os.path.exists(csv_file):
-    bigDF = pd.read_csv(csv_file)
-    experiments_done = np.unique(bigDF["index"])
+    if args.force:
+        os.remove(csv_file)
+        bigDF = pd.DataFrame()
+        experiments_done = []
+    else:
+        bigDF = pd.read_csv(csv_file)
+        experiments_done = np.unique(bigDF["index"])
+    
+    
 
 
 for data in tqdm.tqdm(TestLoader, total=len(TestLoader)):
