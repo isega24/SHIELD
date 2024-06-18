@@ -165,3 +165,5 @@ outputs/
 docs/results.csv
 docs/tables/
 test_results.txt
+*.zip
+*.sh
