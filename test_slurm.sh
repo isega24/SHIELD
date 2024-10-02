@@ -20,7 +20,7 @@ dataset=$2
 if [ -z "$dataset" ]
 then
     echo "No dataset specified, running for all datasets"
-    datasets="CIFAR10 CIFAR100 FashionMNIST EMNIST Flowers OxfordIIITPet"
+    datasets="EMNIST CIFAR10 CIFAR100 FashionMNIST Flowers OxfordIIITPet"
 fi
 for dataset in $datasets;
 do
@@ -37,4 +37,6 @@ do
     done
 done
 
+# Comprimir el directorio ./results/
 
+# Mover por sftp el fichero comprimido results.zip a hercules.ugr.es

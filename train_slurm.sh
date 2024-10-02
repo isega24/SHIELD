@@ -13,13 +13,12 @@ eval "$(conda shell.bash hook)"
 
 conda activate ./.conda
 
-for model in "efficientnet_v2_s" "efficientnet-b2"
+for percentage in 15 18 21 24 27
 do
-    # Baseline
-    python -u SHIELD/tests/train.py --dataset $1 --pretrained_model $model
-    for percentage in 3 6 9 12
+    for model in "efficientnet-b2" "efficientnet_v2_s"
     do
-        python -u SHIELD/tests/train.py --dataset $1 --pretrained_model $model --shield --percentage $percentage
+        # Baseline
         python -u SHIELD/tests/train.py --dataset $1 --pretrained_model $model --xshield --percentage $percentage
+        python -u SHIELD/tests/train.py --dataset $1 --pretrained_model $model --shield --percentage $percentage
     done
 done
