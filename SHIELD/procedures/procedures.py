@@ -75,7 +75,7 @@ def classifier(pretrained_model, num_classes):
 
 
 def train_step(
-    ds_loader, model, optimizer, loss_f, reg_f, device, transform=None, train=True
+    ds_loader, model, optimizer, loss_f, reg_f, device, transform=None, train=True,grad_update=-1,
 ):
     '''
     Train step for the model. This function proceed to do a full epoch of training or validation, detending
@@ -92,6 +92,7 @@ def train_step(
     :param train: A boolean indicating if the model should be trained or validated. 
         - If `train` is True, the model is trained and updated with the optimizer.
         - If `train` is False, the model is validated and the optimizer is not used.
+    :param grad_update: The number of gradient updates each epoch. If -1, the number of updates is the same as the batches on the dataset.
     :return: The loss, accuracy and regularization of the model.
     
     Example of a full step of training and validation using this function:
@@ -113,8 +114,11 @@ def train_step(
             torch.save(model.state_dict(), "best_model.pt")
     '''
     ACC, LOSS, REGS = 0.0, 0.0, 0.0
-
-    ds_loader = tqdm.tqdm(ds_loader, desc="Training" if train else "Validation")
+    # Utilizar solo los primeros grad_update batches
+    grad_update = len(ds_loader) if grad_update == -1 else grad_update
+    ds_loader = tqdm.tqdm(
+        ds_loader, desc="Training" if train else "Validation", total=grad_update
+    )
     total = 0
     if train == True:
         model.train()
@@ -122,6 +126,7 @@ def train_step(
         model.eval()
     torch.cuda.empty_cache()
     model = model.to(device)
+    i = 0
     for data in ds_loader:
         batch_input, batch_labels = data
         total += len(batch_input)
@@ -160,6 +165,9 @@ def train_step(
                 "reg": REGS / total,
             }
         )
+        i += 1
+        if i == grad_update:
+            break
 
     return (
         LOSS / total,

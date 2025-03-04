@@ -44,4 +44,15 @@ def arg_parser():
         default=0,
         help="Percentage of perturbation from 0 to 100",
     )
+    parser.add_argument(
+        "--saliencyguided",
+        action="store_true",
+        help="Saliency guided perturbation",
+    )
+    parser.add_argument(
+        "--saliencymixup",
+        action="store_true",
+        help="Saliency guided perturbation",
+    )
+        
     return parser

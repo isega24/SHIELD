@@ -172,3 +172,5 @@ docs/tables/
 test_results.txt
 *.zip
 *.sh
+.torch
+imagenet_results/

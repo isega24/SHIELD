@@ -1,7 +1,7 @@
 import os
 import shutil
 import json
-from SHIELD.SHIELD import shield,xshield
+from SHIELD.SHIELD import shield, xshield, saliencyguided, saliencymixup
 from SHIELD.procedures import procedures
 import torch
 import torch.nn.functional as F
@@ -22,6 +22,7 @@ n_classes = {
     "FashionMNIST": 10,
     "Flowers": 102,
     "OxfordIIITPet": 37,
+    "imagenet_1k": 1000,
 }
 
 if torch.cuda.is_available():
@@ -38,7 +39,11 @@ if __name__ == "__main__":
     classifier = procedures.classifier(args.pretrained_model, n_classes[args.dataset])
     classifier.to(device)
 
-    configuration = "SHIELD" if args.shield else ("X-SHIELD" if args.xshield else "Baseline")
+    saliency_guided = "SaliencyGuided" if args.saliencyguided else ("SaliencyMixup" if args.saliencymixup else "Baseline")
+
+    configuration = (
+        "SHIELD" if args.shield else ("X-SHIELD" if args.xshield else saliency_guided)
+    )
 
     config_name = f"{configuration}_{args.pretrained_model}" + (
         "" if configuration == "Baseline" else f"_{args.percentage}"
@@ -54,13 +59,12 @@ if __name__ == "__main__":
         else:
             event_accum = EventAccumulator(save_model_dir)
             event_accum.Reload()
-            
+
             # Abro el tensorboard y compruebo si hay Test/Accuracy. Si lo hay, no hago nada. Si no, lo hago.
             if "Test/Accuracy" in event_accum.Tags()["scalars"] and "Test/Loss" in event_accum.Tags()["scalars"]:
                 print("Acc: " + event_accum.Scalars("Test/Accuracy")[-1].value)
                 print("Loss: " + event_accum.Scalars("Test/Loss")[-1].value)
                 raise ValueError("Model already tested: " + save_model_dir)
-
 
     # transform = procedures.data_augmentation(args)
 
@@ -115,9 +119,11 @@ if __name__ == "__main__":
             optimizer=optimizer,
             loss_f=loss_f,
             reg_f=lambda x,y:shield(model=x,input=y,percentage=args.percentage,device=device) if args.shield else 
-                            xshield(model=x,input=y,percentage=args.percentage,device=device) if args.xshield else None,
+                            (xshield(model=x,input=y,percentage=args.percentage,device=device) if args.xshield else ( 
+                            saliencyguided(model=x,input=y,percentage=args.percentage,device=device) if args.saliencyguided else(
+                            saliencymixup(model=x,input=y,percentage=args.percentage,device=device) if args.saliencymixup else None))),
             device=device,
-            #transform=transform,
+            grad_update = len(TrainLoader) if args.dataset != "imagenet_1k" else 5000,
         )
         writer.add_scalar("Train/Accuracy", train_acc, epoch)
         writer.add_scalar("Train/Loss", train_loss, epoch)
@@ -139,7 +145,9 @@ if __name__ == "__main__":
             torch.save(classifier.state_dict(), save_model_dir+"/model.pt")
             print("Saved model")
 
-    classifier.load_state_dict(torch.load(save_model_dir+"/model.pt"), map_location=device)
+    classifier.load_state_dict(
+        torch.load(save_model_dir + "/model.pt", map_location=device)
+    )
 
     test = load_data(
         args.dataset,
@@ -159,3 +167,5 @@ if __name__ == "__main__":
     writer.add_scalar("Test/Accuracy", test_acc, 0)
     writer.add_scalar("Test/Regularization", test_reg, 0)
     writer.close()
+
+

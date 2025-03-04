@@ -10,6 +10,7 @@ import json
 from torch.utils.tensorboard.writer import SummaryWriter
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 from SHIELD.procedures import procedures
+import tqdm
 
 import os
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
         "FGVC": 102,
         "OxfordIIITPet": 37,
         "Food101": 101,
-        "ImageNet": 1000,
+        "imagenet_1k": 1000,
     }
 
     config = json.load(open(args.saved_dir + "/config.json"))
@@ -85,7 +86,6 @@ if __name__ == "__main__":
     batch_size = 32
     TestLoader = DataLoader(Test, batch_size=batch_size, shuffle=False)
 
-
     def loss_f(ypred, y_label):
         return F.cross_entropy(ypred, torch.argmax(y_label, 1))
 
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     total = 0
 
     classifier = classifier.eval().to(device)
+    TestLoader = tqdm.tqdm(TestLoader, desc="Testing",total=len(TestLoader))
     with torch.no_grad():
         for data in TestLoader:
             inputs, labels = data
@@ -120,14 +121,17 @@ if __name__ == "__main__":
 
             loss += loss_f(outputs, labels)
             total += len(inputs)
+            TestLoader.set_postfix(
+                accuracy=f"{acc / total:.4f}",
+                loss=f"{loss / total:.4f}",
+            )
 
     writer = SummaryWriter(log_dir=args.saved_dir)
     print(f"Accuracy: {acc / total}")
     print(f"Loss: {loss / total}")
     # Aniade en el writer el accuracy y el loss de test
     # Borrar el scalar "Test/Accuracy" y "Test/Loss" si se quiere sobreescribir
-    
-    
+
     writer.add_scalar("Test/Accuracy", acc / total, 0)
     writer.add_scalar("Test/Loss", loss / total, 0)
     writer.close()
